@@ -38,7 +38,10 @@
 
 #define  INCLUDE_FROM_DATAFLASHMANAGER_C
 #include "DataflashManager.h"
-#include "../../AT45DB641E.h"
+#include "Lib/AT45DB641E.h"
+
+#define CS1 4
+#define CS2 6
 
 /** Initialise the Dataflash memory. */
 void DataflashManager_Initialisation(void)
@@ -75,10 +78,10 @@ void DataflashManager_WriteBlocks(USB_ClassInfo_MS_Device_t* const MSInterfaceIn
 			uint8_t byte=Endpoint_Read_8();
 			/* Store byte in memory at address BlockAddress+i*VIRTUAL_MEMORY_BLOCK_SIZE+j */
 			// <-- Insert code here
-			if(j < 255)// Reading CS1 - 0x84 = Buffer write for CS1
-				AT45DB641E_cmd(&PORTB, 4, 0x84, &byte, 1);
-			else if(j > 256 && j < 511)//Reading CS2 - 0x87 = Buffer read for CS2
-				AT45DB641E_cmd(&PORTB, 4, 0x87, &byte, 1);
+			if(j < (VIRTUAL_MEMORY_BLOCK_SIZE / 2) - 1)// Reading CS1 - 0x84 = Buffer write for CS1
+				AT45DB641E_cmd(&PORTB, CS1, 0x84, &byte, 1);
+			else if(j > VIRTUAL_MEMORY_BLOCK_SIZE / 2  && j < VIRTUAL_MEMORY_BLOCK_SIZE - 1)//Reading CS2 - 0x87 = Buffer read for CS2
+				AT45DB641E_cmd(&PORTB, CS2, 0x87, &byte, 1);
 
 			if (MSInterfaceInfo->State.IsMassStoreReset) return;
 		}
@@ -116,10 +119,10 @@ void DataflashManager_ReadBlocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInf
 			/* Retrieve byte in memory at address BlockAddress+i*VIRTUAL_MEMORY_BLOCK_SIZE+j */
 			uint8_t byte;
 			// <-- Insert code here
-			if(j < 255)// Reading CS1 - 0xD4 = Buffer read for CS1
-				AT45DB641E_cmd(&PORTB, 4, 0xD4, &byte, 1);
-			else if(j > 256 && j < 511)//Reading CS2 - 0xD6 = Buffer read for CS2
-				AT45DB641E_cmd(&PORTB, 4, 0xD6, &byte, 1);
+			if(j < (VIRTUAL_MEMORY_BLOCK_SIZE / 2) - 1)// Reading CS1 - 0xD4 = Buffer read for CS1
+				AT45DB641E_cmd(&PORTB, CS1, 0xD4, &byte, 1);
+			else if(j > VIRTUAL_MEMORY_BLOCK_SIZE / 2  && j < VIRTUAL_MEMORY_BLOCK_SIZE - 1)//Reading CS2 - 0xD6 = Buffer read for CS2
+				AT45DB641E_cmd(&PORTB, CS2, 0xD6, &byte, 1);
 			/* Send byte to USB host */
 			Endpoint_Write_8(byte);
 			if (MSInterfaceInfo->State.IsMassStoreReset) return;
