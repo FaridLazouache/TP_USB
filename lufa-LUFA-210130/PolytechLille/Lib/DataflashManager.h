@@ -49,7 +49,7 @@
 	/* Defines: */
 		/** Total number of bytes of the storage medium, comprised of one or more Dataflash ICs. */
 		// <- Ajust this value
-		#define VIRTUAL_MEMORY_BYTES                1024*1024L
+		#define VIRTUAL_MEMORY_BYTES               16*1024*1024L
 
 		/** Block size of the device. This is kept at 512 to remain compatible with the OS despite the underlying
 		 *  storage media (Dataflash) using a different native block size. Do not change this value.

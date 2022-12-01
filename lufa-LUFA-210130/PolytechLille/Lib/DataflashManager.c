@@ -39,13 +39,18 @@
 #define  INCLUDE_FROM_DATAFLASHMANAGER_C
 #include "DataflashManager.h"
 #include "Lib/AT45DB641E.h"
+#include "Lib/spi.h" 
 
 #define CS1 4
 #define CS2 6
 
+
 /** Initialise the Dataflash memory. */
 void DataflashManager_Initialisation(void)
 {
+	spi_init(); // initiate SPI
+	DDRB|=0x50;
+	PORTB|=0x50;
 }
 
 /** Writes blocks (OS blocks, not Dataflash pages) to the storage medium, the board Dataflash IC(s), from
@@ -78,10 +83,20 @@ void DataflashManager_WriteBlocks(USB_ClassInfo_MS_Device_t* const MSInterfaceIn
 			uint8_t byte=Endpoint_Read_8();
 			/* Store byte in memory at address BlockAddress+i*VIRTUAL_MEMORY_BLOCK_SIZE+j */
 			// <-- Insert code here
-			if(j < (VIRTUAL_MEMORY_BLOCK_SIZE / 2) - 1)// Reading CS1 - 0x84 = Buffer write for CS1
-				AT45DB641E_cmd(&PORTB, CS1, 0x84, &byte, 1);
-			else if(j > VIRTUAL_MEMORY_BLOCK_SIZE / 2  && j < VIRTUAL_MEMORY_BLOCK_SIZE - 1)//Reading CS2 - 0x87 = Buffer read for CS2
-				AT45DB641E_cmd(&PORTB, CS2, 0x87, &byte, 1);
+			if(j < VIRTUAL_MEMORY_BLOCK_SIZE / 2 - 1)  
+				AT45DB641E_write_buffer(&PORTB, CS1, &byte, 0, j==0?SEQ_START:0);
+			if(j == VIRTUAL_MEMORY_BLOCK_SIZE / 2 - 1)
+			{
+				AT45DB641E_write_buffer(&PORTB, CS1, &byte, 0, SEQ_STOP);
+				AT45DB641E_write_page(&PORTB, CS1, BlockAddress + i);
+			} 
+			if(j >= VIRTUAL_MEMORY_BLOCK_SIZE / 2  && j < VIRTUAL_MEMORY_BLOCK_SIZE - 1)
+				AT45DB641E_write_buffer(&PORTB, CS2, &byte, 0, j==(VIRTUAL_MEMORY_BLOCK_SIZE/2)?SEQ_START:0);
+			if(j == VIRTUAL_MEMORY_BLOCK_SIZE -1)
+			{
+				AT45DB641E_write_buffer(&PORTB, CS2, &byte, 0, SEQ_STOP);
+				AT45DB641E_write_page(&PORTB, CS2, BlockAddress + i);
+			}
 
 			if (MSInterfaceInfo->State.IsMassStoreReset) return;
 		}
@@ -119,10 +134,22 @@ void DataflashManager_ReadBlocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInf
 			/* Retrieve byte in memory at address BlockAddress+i*VIRTUAL_MEMORY_BLOCK_SIZE+j */
 			uint8_t byte;
 			// <-- Insert code here
-			if(j < (VIRTUAL_MEMORY_BLOCK_SIZE / 2) - 1)// Reading CS1 - 0xD4 = Buffer read for CS1
-				AT45DB641E_cmd(&PORTB, CS1, 0xD4, &byte, 1);
-			else if(j > VIRTUAL_MEMORY_BLOCK_SIZE / 2  && j < VIRTUAL_MEMORY_BLOCK_SIZE - 1)//Reading CS2 - 0xD6 = Buffer read for CS2
-				AT45DB641E_cmd(&PORTB, CS2, 0xD6, &byte, 1);
+			if(j < VIRTUAL_MEMORY_BLOCK_SIZE / 2 - 1)
+			{
+				AT45DB641E_read_page(&PORTB, CS1, BlockAddress + i, &byte, 1,j==0?SEQ_START:0);
+			}
+			if(j == VIRTUAL_MEMORY_BLOCK_SIZE / 2 - 1)
+			{
+				AT45DB641E_read_page(&PORTB, CS1, BlockAddress + i, &byte, 1, SEQ_STOP);
+			} 
+			if(j >= VIRTUAL_MEMORY_BLOCK_SIZE / 2  && j < VIRTUAL_MEMORY_BLOCK_SIZE - 1)
+			{
+				AT45DB641E_read_page(&PORTB, CS2, BlockAddress + i, &byte, 1, j==(VIRTUAL_MEMORY_BLOCK_SIZE/2)?SEQ_START:0);
+			}
+			if(j == VIRTUAL_MEMORY_BLOCK_SIZE - 1)
+			{
+				AT45DB641E_read_page(&PORTB, CS2, BlockAddress + i, &byte, 1, SEQ_STOP);
+			}
 			/* Send byte to USB host */
 			Endpoint_Write_8(byte);
 			if (MSInterfaceInfo->State.IsMassStoreReset) return;
