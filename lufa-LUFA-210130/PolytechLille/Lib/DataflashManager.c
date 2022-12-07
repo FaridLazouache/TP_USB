@@ -43,12 +43,13 @@
 
 #define CS1 4
 #define CS2 6
+#define PB5 0x20
 
 
 /** Initialise the Dataflash memory. */
 void DataflashManager_Initialisation(void)
 {
-	spi_init(); // initiate SPI
+	spi_init(); // initiate SPI
 	DDRB|=0x50;
 	PORTB|=0x50;
 }
@@ -162,6 +163,8 @@ void DataflashManager_ReadBlocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInf
 /** Disables the Dataflash memory write protection bits on the board Dataflash ICs, if enabled. */
 void DataflashManager_ResetDataflashProtections(void)
 {
+	DDRB |= PB5;
+	PORTB |= PB5;
 }
 
 /** Performs a simple test on the attached Dataflash IC(s) to ensure that they are working.
