@@ -35,7 +35,6 @@
  */
 
 #include "MassStorage.h"
-#include "LUFA/Drivers/USB/USB.h"
 
 /** LUFA Mass Storage Class driver interface configuration and state information. This structure is
  *  passed to all Mass Storage Class driver functions, so that multiple instances of the same class
@@ -72,13 +71,6 @@ int main(void)
 
 	LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
 	GlobalInterruptEnable();
-
-	USB_Attach(); // Attaches the device to the USB bus. This announces the device's presence to any attached USB host, starting the enumeration process. If no host is present, attaching the device will allow for enumeration once a host is connected to the device.
-	USB_Init(); // Init USB
-
-	Endpoint_ConfigureEndpoint(Disk_MS_Interface.Config.DataINEndpoint.Address, EP_TYPE_BULK, Disk_MS_Interface.Config.DataINEndpoint.Size, Disk_MS_Interface.Config.DataINEndpoint.Banks); // Configure INEndpoint
-	Endpoint_ConfigureEndpoint(Disk_MS_Interface.Config.DataOUTEndpoint.Address, EP_TYPE_BULK, Disk_MS_Interface.Config.DataOUTEndpoint.Size, Disk_MS_Interface.Config.DataOUTEndpoint.Banks); // Configure OUTEndpoint
-	Endpoint_EnableEndpoint();	
 
 	for (;;)
 	{
