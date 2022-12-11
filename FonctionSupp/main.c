@@ -2,8 +2,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <error.h>
+#include "main.h"
+
+
+
+const int VENDOR_ID = 0x03eb; // Our USB Vendor IO
 
 int main()
+{
+    
+    AdditionalFeature(INITIALISATION);
+    AdditionalFeature(RECUPERATION);
+    
+}
+
+void AdditionalFeature(int mode)
 {
     libusb_context *context;
     int status=libusb_init(&context);
@@ -22,13 +35,24 @@ int main()
             continue;
         uint8_t bus=libusb_get_bus_number(device);
         uint8_t address=libusb_get_device_address(device);
-        printf("Device Found @ (Bus:Address) %d:%d\n",bus,address);
-        printf("Vendor ID 0x0%x\n",desc.idVendor);
-        printf("Product ID 0x0%x\n",desc.idProduct);
+
+        if(desc.idVendor == VENDOR_ID)
+        {
+            printf("Device Found @ (Bus:Address) %d:%d\n",bus,address);
+            printf("Vendor ID 0x0%x\n",desc.idVendor);
+            printf("Product ID 0x0%x\n",desc.idProduct);
+
+            if(mode == INITIALISATION)
+            {
+                printf("\f INITIALISATION MODE\n\n");
+            }
+            else if(mode == RECUPERATION)
+            {
+                printf("\f RECUPERATION MODE\n\n");
+            }
+        }
   }
     libusb_free_device_list(list,1);
 
     libusb_exit(context);
 }
-
-=''
