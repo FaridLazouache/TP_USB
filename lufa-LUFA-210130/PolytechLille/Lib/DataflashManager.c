@@ -49,9 +49,12 @@
 /** Initialise the Dataflash memory. */
 void DataflashManager_Initialisation(void)
 {
+	DDRB |= 0x70;
+	PORTB |= 0x70;
 	spi_init(); // initiate SPI
-	DDRB|=0x50;
-	PORTB|=0x50;
+	AT45DB641E_page_size(&PORTB, CS1, 256);
+	AT45DB641E_page_size(&PORTB, CS2, 256);
+
 }
 
 /** Writes blocks (OS blocks, not Dataflash pages) to the storage medium, the board Dataflash IC(s), from
@@ -91,7 +94,7 @@ void DataflashManager_WriteBlocks(USB_ClassInfo_MS_Device_t* const MSInterfaceIn
 				AT45DB641E_write_buffer(&PORTB, CS1, &byte, 0, SEQ_STOP);
 				AT45DB641E_write_page(&PORTB, CS1, BlockAddress + i);
 			} 
-			if(j >= VIRTUAL_MEMORY_BLOCK_SIZE / 2  && j < VIRTUAL_MEMORY_BLOCK_SIZE - 1)
+			if((j >= VIRTUAL_MEMORY_BLOCK_SIZE / 2)  && (j < VIRTUAL_MEMORY_BLOCK_SIZE - 1))
 				AT45DB641E_write_buffer(&PORTB, CS2, &byte, 0, j==(VIRTUAL_MEMORY_BLOCK_SIZE/2)?SEQ_START:0);
 			if(j == VIRTUAL_MEMORY_BLOCK_SIZE -1)
 			{
@@ -143,7 +146,7 @@ void DataflashManager_ReadBlocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInf
 			{
 				AT45DB641E_read_page(&PORTB, CS1, BlockAddress + i, &byte, 1, SEQ_STOP);
 			} 
-			if(j >= VIRTUAL_MEMORY_BLOCK_SIZE / 2  && j < VIRTUAL_MEMORY_BLOCK_SIZE - 1)
+			if((j >= VIRTUAL_MEMORY_BLOCK_SIZE / 2)  && (j < VIRTUAL_MEMORY_BLOCK_SIZE - 1))
 			{
 				AT45DB641E_read_page(&PORTB, CS2, BlockAddress + i, &byte, 1, j==(VIRTUAL_MEMORY_BLOCK_SIZE/2)?SEQ_START:0);
 			}
@@ -163,8 +166,6 @@ void DataflashManager_ReadBlocks(USB_ClassInfo_MS_Device_t* const MSInterfaceInf
 /** Disables the Dataflash memory write protection bits on the board Dataflash ICs, if enabled. */
 void DataflashManager_ResetDataflashProtections(void)
 {
-	DDRB |= PB5;
-	PORTB |= PB5;
 }
 
 /** Performs a simple test on the attached Dataflash IC(s) to ensure that they are working.
