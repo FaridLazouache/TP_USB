@@ -52,8 +52,10 @@ void DataflashManager_Initialisation(void)
 	DDRB |= 0x70;
 	PORTB |= 0x70;
 	spi_init(); // initiate SPI
-	AT45DB641E_page_size(&PORTB, CS1, 256);
-	AT45DB641E_page_size(&PORTB, CS2, 256);
+	AT45DB641E_page_size(&PORTB, CS1, 276);
+	AT45DB641E_page_size(&PORTB, CS2, 276);
+	AT45DB641E_page_size(&PORTB,CS1,256);
+	AT45DB641E_page_size(&PORTB, CS2,256);
 
 }
 
