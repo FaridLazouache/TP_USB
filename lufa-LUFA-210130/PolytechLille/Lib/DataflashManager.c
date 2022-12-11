@@ -50,8 +50,10 @@
 void DataflashManager_Initialisation(void)
 {
 	spi_init(); // initiate SPI
-	DDRB|=0x50;
-	PORTB|=0x50;
+	DDRB|=0x70;
+	PORTB|=0x70;
+	AT45DB641E_page_size(&PORTB,CS1,256);
+	AT45DB641E_page_size(&PORTB, CS2,256);
 }
 
 /** Writes blocks (OS blocks, not Dataflash pages) to the storage medium, the board Dataflash IC(s), from
