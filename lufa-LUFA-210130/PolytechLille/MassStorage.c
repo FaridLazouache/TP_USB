@@ -35,6 +35,7 @@
  */
 
 #include "MassStorage.h"
+uint32_t NbRead,NbWrite;
 
 /** LUFA Mass Storage Class driver interface configuration and state information. This structure is
  *  passed to all Mass Storage Class driver functions, so that multiple instances of the same class
@@ -65,6 +66,10 @@ USB_ClassInfo_MS_Device_t Disk_MS_Interface =
 /** Main program entry point. This routine contains the overall program flow, including initial
  *  setup of all components and the main program loop.
  */
+
+void SpecificOut(void);
+void SpecificIn(void);
+
 int main(void)
 {
 	SetupHardware();
@@ -76,6 +81,8 @@ int main(void)
 	{
 		MS_Device_USBTask(&Disk_MS_Interface);
 		USB_USBTask();
+		SpecificIn();
+		SpecificOut();
 	}
 }
 
@@ -136,6 +143,9 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 
 	ConfigSuccess &= MS_Device_ConfigureEndpoints(&Disk_MS_Interface);
 
+	ConfigSuccess &= Endpoint_ConfigureEndpoint(SPECIFIC_IN_EPADDR, EP_TYPE_INTERRUPT, SPECIFC_IN_EPSIZE, 1);
+        ConfigSuccess &= Endpoint_ConfigureEndpoint(SPECIFIC_OUT_EPADDR, EP_TYPE_INTERRUPT, SPECIFIC_OUT_EPSIZE, 1);
+
 	LEDs_SetAllLEDs(ConfigSuccess ? LEDMASK_USB_READY : LEDMASK_USB_ERROR);
 }
 
@@ -160,3 +170,35 @@ bool CALLBACK_MS_Device_SCSICommandReceived(USB_ClassInfo_MS_Device_t* const MSI
 	return CommandSuccess;
 }
 
+void SpecificOut(void)
+{
+        Endpoint_SelectEndpoint(SPECIFIC_OUT_EPADDR);
+
+        if (Endpoint_IsOUTReceived())
+        {
+                if (Endpoint_IsReadWriteAllowed())
+                {
+                        uint8_t dummy=Endpoint_Read_8();
+			if(dummy){
+				NbRead = 0;
+				NbWrite = 0;
+				}
+                }
+
+                Endpoint_ClearOUT();
+        }
+}
+
+void SpecificIn(void)
+{
+        Endpoint_SelectEndpoint(SPECIFIC_IN_EPADDR);
+
+        if (Endpoint_IsReadWriteAllowed())
+        {
+
+		Endpoint_Write_32_LE(NbRead);
+		Endpoint_Write_32_LE(NbWrite);
+
+                Endpoint_ClearIN();
+        }
+}
